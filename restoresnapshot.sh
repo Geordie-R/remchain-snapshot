@@ -52,7 +52,6 @@ statefolder=$datafolder/state
 statehistoryfolder=$datafolder/state-history
 snapshotsfolder=$datafolder/snapshots
 lastdownloadfolder=$snapshotsfolder/lastdownload
-startcreate=/root/startrestored.sh
 
 # create download folder in snapshots
 mkdir -p $lastdownloadfolder
@@ -60,6 +59,9 @@ cd $lastdownloadfolder
 echo "clearing lastdownload folder"
 rm -f *.bin
 
+
+
+#Choose what type of snapshot you require, which in turn goes to my website to retrieve the files that line up together.
 PS3='Please enter the menu number below: '
 options=("Snapshot Only" "Snapshot and Blocks Log" "Snapshot and Blocks Log and State History" "Quit")
 snaptypephp=""
@@ -88,20 +90,22 @@ break
     esac
 done
 
+####Potential options end up as the following.  Run them manually if you're interested to see what it returns.
 
+#https://www.geordier.co.uk/snapshots/latestSnapshotType.php?type=snap
+#https://www.geordier.co.uk/snapshots/latestSnapshotType.php?type=blocks
+#https://www.geordier.co.uk/snapshots/latestSnapshotType.php?type=state-history
 
+# a typical response to running one of the URL above might look like this if you choose snap: NULL NULL 2020-04-12_21-01-snaponly.tar.gz
 
 latestsnapshot=$(curl -s https://www.geordier.co.uk/snapshots/latestSnapshotType.php?type=$snaptypephp)
 read -a arr <<< $latestsnapshot
 state=${arr[0]};
 blocks=${arr[1]};
 snap=${arr[2]};
-#echo "exiting"
-#exit 1
 
 
 function downloadType (){
-#echo "this is: $1"
 local result=0
   if [[ $1 == "NULL" ]]
   then
@@ -113,7 +117,7 @@ local result=0
 echo $result
 }
 
-
+#Check  if we are running each option
 stateresult=$(downloadType "$state")
 blocksresult=$(downloadType "$blocks")
 snapresult=$(downloadType "$snap")
@@ -121,30 +125,35 @@ echo "stateresult is $stateresult"
 echo "blocksresult is $blocksresult"
 echo "snapresult is $snapresult"
 
-
+#Clear blocks folder
 rm -rf $blocksfolder*/
+#Clear state folder
 rm -rf $statefolder*/
-echo "lets see"
-ls $statefolder
+#Remove all bin files from snapshots folder
+rm -rf $snapshotsfolder/*.bin
 
+
+#Check if we are running the snapshot restore
 if [[ $snapresult -eq 1 ]]
 then
 
-
+#Create snapshots folder inside the lastdownload folder
 mkdir -p $lastdownloadfolder/snapshot
 cd $lastdownloadfolder/snapshot
 
 
-
+#Download snapshot
 echo "Downloading snapshot now..."
   wget -Nc https://www.geordier.co.uk/snapshots/$snap -q --show-progress  -O - | sudo tar -Sxz --strip=4
   echo "Downloaded Snapshot $snap"
+#Select the only bin file in the downloaded snapshot folder (due to previous clear)
+binfile=$(ls *.bin | head -1)
+#Copy snapshot from lastdownload folder to the actual snapshots folder
 cp -a $lastdownloadfolder/snapshot/. $snapshotsfolder/
-binfile=$(ls *.bin | sort -n | head -1)
 
 fi
 
-
+#Check if we are doing a blockslog restore
 if [[ $blocksresult -eq 1 ]]
 then
 
@@ -160,7 +169,9 @@ cp -a $lastdownloadfolder/blocks/. $blocksfolder/
 fi
 
 
-
+#Check if we are doing a state history restore.
+#Note if you plan to restore state history you will need the required options and plugins in your config file.
+#If this does not make sense to you, choose a blocks restore option 2 when you re-run this.
 if [[ $stateresult -eq 1 ]]
 then
 echo "Downloading state history now from https://www.geordier.co.uk/snapshots/state-history/$state"
@@ -197,14 +208,6 @@ echo "Node stopped"
 }
 
 
-function createStartNodeWithSnapshot() {
-rm -f $startcreate
-touch $startcreate && chmod +x $startcreate
-echo "Creating $startcreate"
-echo "echo \"Starting REMChain w Snapshot- CONFIG: $configfolder BINFILE: $snapshotsfolder/$binfile DATAFOLDER: $datafolder\"" >> $startcreate
-echo "remnode --config-dir $configfolder/ --disable-replay-opts --snapshot $snapshotsfolder/$binfile --data-dir $datafolder/ >> $logfile 2>&1 &" >> $startcreate
-}
-
 function startNode() {
     echo "Starting REMChain - CONFIG: $configfolder BINFILE: $snapshotsfolder/$binfile DATAFOLDER: $datafolder"
   remnode --config-dir $configfolder/ --disable-replay-opts --data-dir $datafolder/ >> $logfile 2>&1 &
@@ -215,19 +218,11 @@ function startNodeSnapshot() {
  remnode --config-dir $configfolder/ --disable-replay-opts --snapshot $snapshotsfolder/$binfile --data-dir $datafolder/ >> $logfile 2>&1 &
 }
 
-
-sleep 3
 stopNode
 sleep 1
-# start remnode with snapshot
 cd ~
 sleep 1
-echo "Creating and running startrestored.sh..."
-#createStartNodeWithSnapshot
-sleep 2
 echo "starting now..."
-#$startcreate
-#remnode --config-dir $configfolder/ --disable-replay-opts --snapshot $snapshotsfolder/$binfile --data-dir $datafolder/ >> $logfile 2>&1 &
 startNodeSnapshot
 
 
