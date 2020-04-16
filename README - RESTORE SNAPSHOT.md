@@ -27,4 +27,5 @@ sudo rm -rf exitoncesync.sh
 sudo wget https://raw.githubusercontent.com/Geordie-R/remchain-snapshot/Geordie-R-v2/restoresnapshot.sh && sudo chmod +x restoresnapshot.sh
 sudo wget https://raw.githubusercontent.com/Geordie-R/remchain-snapshot/Geordie-R-v2/exitoncesync.sh && sudo chmod +x exitoncesync.sh
 ./restoresnapshot.sh
+
 ```
