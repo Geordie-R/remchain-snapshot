@@ -1,8 +1,3 @@
-# REMChain Snapshots
-
-#IMPORTANT PLEASE READ
-
-
 # Restoring a snapshot
 ## restoresnapshot.sh - Without autorun
 
