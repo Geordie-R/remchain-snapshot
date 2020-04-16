@@ -51,6 +51,20 @@ rm -f *.bin
 
 
 
+
+cat << "MENUEOF"
+
+
+███╗   ███╗███████╗███╗   ██╗██╗   ██╗
+████╗ ████║██╔════╝████╗  ██║██║   ██║
+██╔████╔██║█████╗  ██╔██╗ ██║██║   ██║
+██║╚██╔╝██║██╔══╝  ██║╚██╗██║██║   ██║
+██║ ╚═╝ ██║███████╗██║ ╚████║╚██████╔╝
+╚═╝     ╚═╝╚══════╝╚═╝  ╚═══╝ ╚═════╝
+MENUEOF
+
+echo "Please choose the type of restore you require.  Bear in mind if you choose option 3, you need to add the necessary lines in your config."
+
 #Choose what type of snapshot you require, which in turn goes to my website to retrieve the files that line up together.
 PS3='Please enter the menu number below: '
 options=("Snapshot Only" "Snapshot and Blocks Log" "Snapshot and Blocks Log and State History" "Quit")
@@ -74,7 +88,8 @@ do
 break
             ;;
         "Quit")
-            break
+            exit 1
+break
             ;;
         *) echo "invalid option $REPLY";;
     esac
