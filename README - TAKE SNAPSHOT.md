@@ -14,7 +14,7 @@ Now we can add this to crontab manually for now and choose to run it every 24hou
 crontab -e
 ```
 
-Now add the following line to run it at every 3am
+Now add the following line to run it every hour (What runs exactly is determined inside the file.  snapshots every 3 hours, blocks every 12 and state history every 24 hours / once per day is the default.
 ```
-0 3 * * * /root/data/snapshots/takesnapshot.sh
+0 * * * * /root/data/snapshots/takesnapshot.sh
 ```
