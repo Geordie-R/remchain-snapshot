@@ -33,16 +33,6 @@
 #░░░░░   ░░░░░  ░░░░░░  ░░░░░░     ░░░░░   ░░░░░░  ░░░░░      ░░░░░░  ░░░░░                  #
 
 
-#From the manual
-#Get the following:
-
-#A portable snapshot (data/snapshots/snapshot-xxxxxxx.bin)
-#The contents of data/state-history
-#Optional: a block log which includes the block the snapshot was taken at. Do not include data/blocks/reversible.
-#Make sure data/state does not exist
-#Start nodeos with the --snapshot option, and the options listed in the state_history_plugin.
-#Do not stop nodeos until it has received at least 1 block from the network, or it won't be able to restart.
-
 # path definitions
 logfile=/root/remnode.log
 configfolder=/root/config
@@ -97,6 +87,7 @@ done
 #https://www.geordier.co.uk/snapshots/latestSnapshotType.php?type=state-history
 
 # a typical response to running one of the URL above might look like this if you choose snap: NULL NULL 2020-04-12_21-01-snaponly.tar.gz
+# notice its space seperated for easy read in to bash
 
 latestsnapshot=$(curl -s https://www.geordier.co.uk/snapshots/latestSnapshotType.php?type=$snaptypephp)
 read -a arr <<< $latestsnapshot
@@ -147,16 +138,17 @@ echo "Downloading snapshot now..."
   wget -Nc https://www.geordier.co.uk/snapshots/$snap -q --show-progress  -O - | sudo tar -Sxz --strip=4
   echo "Downloaded Snapshot $snap"
 #Select the only bin file in the downloaded snapshot folder (due to previous clear)
-binfile=$(ls *.bin | head -1)
 #Copy snapshot from lastdownload folder to the actual snapshots folder
 cp -a $lastdownloadfolder/snapshot/. $snapshotsfolder/
-
+binfile=$(ls *.bin | head -1)
+echo "bin file dwnloaded is $binfile"
 fi
 
 #Check if we are doing a blockslog restore
 if [[ $blocksresult -eq 1 ]]
 then
 
+#Create blocks folder inside the lastdownload folder
 mkdir -p $lastdownloadfolder/blocks
 cd $lastdownloadfolder/blocks
 
@@ -171,7 +163,7 @@ fi
 
 #Check if we are doing a state history restore.
 #Note if you plan to restore state history you will need the required options and plugins in your config file.
-#If this does not make sense to you, choose a blocks restore option 2 when you re-run this.
+#If this does not make sense to you, choose a blocks restore option: 2, when you re-run this.
 if [[ $stateresult -eq 1 ]]
 then
 echo "Downloading state history now from https://www.geordier.co.uk/snapshots/state-history/$state"
@@ -184,12 +176,9 @@ echo "State history downloaded:  $state"
 cp -a $lastdownloadfolder/state-history/. $statehistoryfolder/
 fi
 
-
 echo "copied files from lastdownload folder"
-
+#Remove contents of lastdownload folder
 rm -R $lastdownloadfolder/*
-
-echo "BIN IS $binfile"
 
 function stopNode() {
 echo "stopping node..."
@@ -218,15 +207,12 @@ function startNodeSnapshot() {
  remnode --config-dir $configfolder/ --disable-replay-opts --snapshot $snapshotsfolder/$binfile --data-dir $datafolder/ >> $logfile 2>&1 &
 }
 
-
 function writePercentage() {
-
 
 ##
 ##  \r = carriage return
 ##  \c = suppress linefeed
 ##
-
 
 diff=$(($2-$1))
 sumit=$(awk "BEGIN {print ($diff/$2)*100}")
@@ -257,49 +243,37 @@ do
 val=$(<$snapshotsfolder/sync.log)
 
 if [[ $val -le 0 ]]; then
-echo "val is 0...breaking"
+echo "0 Block Difference Detected"
         break;
 fi
         sleep 2
-#echo "$val blocks to go to catch up and sync"
 done
 
-echo "Synced in main!!!"
-#echo "final difference is blocks was $(<$snapshotsfolder/sync.log)"
 rm $snapshotsfolder/sync.log
 cd ~
 echo "starting chain..."
 startNode
 #remnode --config-dir $configfolder/ --disable-replay-opts --data-dir $datafolder/ >> $logfile 2>&1 &
 cat << "EOF"
-.----------------.  .----------------.  .----------------.  .----------------.  .-----------------.
-| .--------------. || .--------------. || .--------------. || .--------------. || .--------------. |
-| |     ______   | || |  ____  ____  | || |      __      | || |     _____    | || | ____  _____  | |
-| |   .' ___  |  | || | |_   ||   _| | || |     /  \     | || |    |_   _|   | || ||_   \|_   _| | |
-| |  / .'   \_|  | || |   | |__| |   | || |    / /\ \    | || |      | |     | || |  |   \ | |   | |
-| |  | |         | || |   |  __  |   | || |   / ____ \   | || |      | |     | || |  | |\ \| |   | |
-| |  \ `.___.'\  | || |  _| |  | |_  | || | _/ /    \ \_ | || |     _| |_    | || | _| |_\   |_  | |
-| |   `._____.'  | || | |____||____| | || ||____|  |____|| || |    |_____|   | || ||_____|\____| | |
-| |              | || |              | || |              | || |              | || |              | |
-| '--------------' || '--------------' || '--------------' || '--------------' || '--------------' |
- '----------------'  '----------------'  '----------------'  '----------------'  '----------------'
-.----------------.  .----------------.  .-----------------. .----------------.
-| .--------------. || .--------------. || .--------------. || .--------------. |
-| |    _______   | || |  ____  ____  | || | ____  _____  | || |     ______   | |
-| |   /  ___  |  | || | |_  _||_  _| | || ||_   \|_   _| | || |   .' ___  |  | |
-| |  |  (__ \_|  | || |   \ \  / /   | || |  |   \ | |   | || |  / .'   \_|  | |
-| |   '.___`-.   | || |    \ \/ /    | || |  | |\ \| |   | || |  | |         | |
-| |  |`\____) |  | || |    _|  |_    | || | _| |_\   |_  | || |  \ `.___.'\  | |
-| |  |_______.'  | || |   |______|   | || ||_____|\____| | || |   `._____.'  | |
-| |              | || |              | || |              | || |              | |
-| '--------------' || '--------------' || '--------------' || '--------------' |
- '----------------'  '----------------'  '----------------'  '----------------'
 
-  ______   ______   .___  ___. .______    __       _______ .___________. _______
- /      | /  __  \  |   \/   | |   _  \  |  |     |   ____||           ||   ____|
-|  ,----'|  |  |  | |  \  /  | |  |_)  | |  |     |  |__   `---|  |----`|  |__
-|  |     |  |  |  | |  |\/|  | |   ___/  |  |     |   __|      |  |     |   __|
-|  `----.|  `--'  | |  |  |  | |  |      |  `----.|  |____     |  |     |  |____
- \______| \______/  |__|  |__| | _|      |_______||_______|    |__|     |_______|
+ ██████╗██╗  ██╗ █████╗ ██╗███╗   ██╗
+██╔════╝██║  ██║██╔══██╗██║████╗  ██║
+██║     ███████║███████║██║██╔██╗ ██║
+██║     ██╔══██║██╔══██║██║██║╚██╗██║
+╚██████╗██║  ██║██║  ██║██║██║ ╚████║
+ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝
+
+███████╗██╗   ██╗███╗   ██╗ ██████╗
+██╔════╝╚██╗ ██╔╝████╗  ██║██╔════╝
+███████╗ ╚████╔╝ ██╔██╗ ██║██║
+╚════██║  ╚██╔╝  ██║╚██╗██║██║
+███████║   ██║   ██║ ╚████║╚██████╗
+╚══════╝   ╚═╝   ╚═╝  ╚═══╝ ╚═════╝#
+
+ ██████╗ ██████╗ ███╗   ███╗██████╗ ██╗     ███████╗████████╗███████╗    ██╗
+██╔════╝██╔═══██╗████╗ ████║██╔══██╗██║     ██╔════╝╚══██╔══╝██╔════╝    ██║
+██║     ██║   ██║██╔████╔██║██████╔╝██║     █████╗     ██║   █████╗      ██║
+██║     ██║   ██║██║╚██╔╝██║██╔═══╝ ██║     ██╔══╝     ██║   ██╔══╝      ╚═╝
+╚██████╗╚██████╔╝██║ ╚═╝ ██║██║     ███████╗███████╗   ██║   ███████╗    ██╗
+ ╚═════╝ ╚═════╝ ╚═╝     ╚═╝╚═╝     ╚══════╝╚══════╝   ╚═╝   ╚══════╝    ╚═╝
 EOF
-
