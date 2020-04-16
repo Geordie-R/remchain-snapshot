@@ -12,6 +12,7 @@ This will download the restoresnapshot.sh to your snapshot folder WITHOUT runnin
 mkdir -p /root/data/snapshots/
 cd /root/data/snapshots/
 sudo rm -rf restoresnapshot.sh
+sudo rm -rf exitoncesync.sh 
 sudo wget https://raw.githubusercontent.com/Geordie-R/remchain-snapshot/Geordie-R-v2/restoresnapshot.sh && sudo chmod +x restoresnapshot.sh
 sudo wget https://raw.githubusercontent.com/Geordie-R/remchain-snapshot/Geordie-R-v2/exitoncesync.sh && sudo chmod +x exitoncesync.sh
 ```
@@ -22,6 +23,7 @@ The code below is identical to the code above but it actually runs it immediatel
 mkdir -p /root/data/snapshots/
 cd /root/data/snapshots/
 sudo rm -rf restoresnapshot.sh
+sudo rm -rf exitoncesync.sh
 sudo wget https://raw.githubusercontent.com/Geordie-R/remchain-snapshot/Geordie-R-v2/restoresnapshot.sh && sudo chmod +x restoresnapshot.sh
 sudo wget https://raw.githubusercontent.com/Geordie-R/remchain-snapshot/Geordie-R-v2/exitoncesync.sh && sudo chmod +x exitoncesync.sh
 ./restoresnapshot.sh
