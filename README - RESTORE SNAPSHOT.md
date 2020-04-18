@@ -1,6 +1,8 @@
 # Restoring a snapshot
 ## restoresnapshot.sh - Without autorun
 
+Demo of the beta sent to beta tester friends - https://youtu.be/wjrETCqnztQ
+
 This will download the restoresnapshot.sh to your snapshot folder WITHOUT running restoresnapshot.sh.  For automatically running the script immediately after download, see the next section below called with autorun.
 
 ```
