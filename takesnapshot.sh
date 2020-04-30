@@ -11,6 +11,10 @@ shcreate=$snapshotsfolder/compressandsendlastsnapshot.sh
 shcreatefull=$snapshotsfolder/compressandsendlastsnapshot_full.sh
 shcreatefullstate=$snapshotsfolder/compressandsendlastsnapshot_fullstate.sh
 
+testsnapshot=0
+testblocks=0
+teststatehistory=0
+
 #Remote Server Params #####################################################
 remote_server_folder=/var/www/geordier.co.uk/snapshots
 remote_user=root@website.geordier.co.uk
@@ -25,11 +29,11 @@ chainstopped=0
 mkdir -p $compressedfolder
 chmod +x $compressedfolder
 
-thehour=$(date +"%H")
+thehour=$(date +"%-H")
 #thehour=0
 
 #Run every 3 hours a day by MOD the hour by 3
-if [[ $(($thehour%3)) -eq 0 ]]
+if [[ $(($thehour%3)) -eq 0 ]] || [[ $testsnapshot -eq 1 ]]
 then
 
 
@@ -52,7 +56,8 @@ fi
 
 
 #Run twice a day by MOD the hour by 12
-if [[ $(($thehour%12)) -eq 0 ]]
+if [[ $(($thehour%12)) -eq 0 ]] || [[ $testblocks -eq 1 ]]
+
 then
 
 
@@ -64,14 +69,13 @@ last_irr_block_num=$(remcli get info | jq '.last_irreversible_block_num')
 while [ $last_irr_block_num -le $head_block_num ]
 do
         last_irr_block_num=$(remcli get info | jq '.last_irreversible_block_num')
-ans=$head_block_num-$last_irr_block_num
-        echo "Last Irreversible Block $last_irr_block_num < $head_block_num - $ans remaining"
+ans=$(($head_block_num-$last_irr_block_num))
+        echo "Last Irreversible Block Reached In $ans Blocks"
         sleep 10
 done
 
-echo "Last Irreversible Block Number Passed - Great, Lets Continue!"
+echo "Last Irreversible Block Number Passed - Great, lets stop the chain now"
 
-echo "Stopping the chain"
 ~/stop.sh
 chainstopped=1
 
@@ -92,7 +96,7 @@ fi
 
 
 #Run twice a day by MOD the hour by 12
-if [[ $(($thehour%12)) -eq 0 ]]
+if [[ $(($thehour%24)) -eq 0 ]] || [[ $teststatehistory -eq 1 ]]
 then
 
 echo "#State History Start #"
