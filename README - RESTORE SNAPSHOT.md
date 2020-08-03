@@ -2,6 +2,8 @@
 
 Prior to restoring from snapshot, make sure that `remnode` has been stopped and the `/data` directory is empty.
 
+A `bad_database_version_exception` error after snapshot recovery is a sign that `/data/blocks` or another subfolder was not removed prior to start.
+
 ## restoresnapshot.sh - Without autorun
 
 Demo of the beta sent to beta tester friends - https://youtu.be/wjrETCqnztQ
