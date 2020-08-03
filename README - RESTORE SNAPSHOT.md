@@ -1,4 +1,7 @@
 # Restoring a snapshot
+
+Prior to restoring from snapshot, make sure that `remnode` has been stopped and the `/data` directory is empty.
+
 ## restoresnapshot.sh - Without autorun
 
 Demo of the beta sent to beta tester friends - https://youtu.be/wjrETCqnztQ
