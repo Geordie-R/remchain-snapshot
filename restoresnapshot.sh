@@ -97,14 +97,14 @@ done
 
 ####Potential options end up as the following.  Run them manually if you're interested to see what it returns.
 
-#https://www.geordier.co.uk/snapshots/latestSnapshotType.php?type=snap
-#https://www.geordier.co.uk/snapshots/latestSnapshotType.php?type=blocks
-#https://www.geordier.co.uk/snapshots/latestSnapshotType.php?type=state-history
+#https://remsnapshots.geordier.co.uk/snapshots/latestSnapshotType.php?type=snap
+#https://remsnapshots.geordier.co.uk/snapshots/latestSnapshotType.php?type=blocks
+#https://remsnapshots.geordier.co.uk/snapshots/latestSnapshotType.php?type=state-history
 
 # a typical response to running one of the URL above might look like this if you choose snap: NULL NULL 2020-04-12_21-01-snaponly.tar.gz
 # notice its space seperated for easy read in to bash
 
-latestsnapshot=$(curl -s https://www.geordier.co.uk/snapshots/latestSnapshotType.php?type=$snaptypephp)
+latestsnapshot=$(curl -s https://remsnapshots.geordier.co.uk/snapshots/latestSnapshotType.php?type=$snaptypephp)
 read -a arr <<< $latestsnapshot
 state=${arr[0]};
 blocks=${arr[1]};
@@ -150,7 +150,7 @@ cd $lastdownloadfolder/snapshot
 
 #Download snapshot
 echo "Downloading snapshot now..."
-  wget -Nc https://www.geordier.co.uk/snapshots/$snap -q --show-progress  -O - | sudo tar -Sxz --strip=4
+  wget -Nc https://remsnapshots.geordier.co.uk/snapshots/$snap -q --show-progress  -O - | sudo tar -Sxz --strip=4
   echo "Downloaded Snapshot $snap"
 #Select the only bin file in the downloaded snapshot folder (due to previous clear)
 #Copy snapshot from lastdownload folder to the actual snapshots folder
@@ -170,7 +170,7 @@ cd $lastdownloadfolder/blocks
 
 echo "Downloading blocks log now from https://www.geordier.co.uk/snapshots/blocks/$blocks"
 
-  wget  -Nc https://www.geordier.co.uk/snapshots/blocks/$blocks -q --show-progress -O - | sudo tar -Sxz --strip=3
+  wget  -Nc https://remsnapshots.geordier.co.uk/snapshots/blocks/$blocks -q --show-progress -O - | sudo tar -Sxz --strip=3
   echo "Blocks log downloaded:  $blocks"
 cp -a $lastdownloadfolder/blocks/. $blocksfolder/
 fi
@@ -181,12 +181,12 @@ fi
 #If this does not make sense to you, choose a blocks restore option: 2, when you re-run this.
 if [[ $stateresult -eq 1 ]]
 then
-echo "Downloading state history now from https://www.geordier.co.uk/snapshots/state-history/$state"
+echo "Downloading state history now from https://remsnapshots.geordier.co.uk/snapshots/state-history/$state"
 
 mkdir -p $lastdownloadfolder/state-history
 cd $lastdownloadfolder/state-history
 
-wget  -Nc https://www.geordier.co.uk/snapshots/state-history/$state -q --show-progress -O - | sudo tar -Sxz --strip=3
+wget  -Nc https://remsnapshots.geordier.co.uk/snapshots/state-history/$state -q --show-progress -O - | sudo tar -Sxz --strip=3
 echo "State history downloaded:  $state"
 cp -a $lastdownloadfolder/state-history/. $statehistoryfolder/
 fi
