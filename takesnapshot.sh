@@ -15,12 +15,22 @@ testsnapshot=0
 testblocks=0
 teststatehistory=0
 
+#Either a remote server can be used to send the snapshots to, or
+#if you have apache installed locally then you can send to that instead
+
+remotewebserver=0
+
+
 #Remote Server Params #####################################################
 remote_server_folder=/var/www/geordier.co.uk/snapshots
 remote_user=root@website.geordier.co.uk
+sshportno=22
+
+# Local Web Server Params (if used)
+local_server_folder=/var/www/remsnapshots.geordier.co.uk/snapshots
+
 
 #Misc Params ##############################################################
-sshportno=22
 datename=$(date +%Y-%m-%d_%H-%M)
 filename="$compressedfolder$datename"
 chainstopped=0
@@ -43,12 +53,23 @@ echo "# Snapshot Only Start. Hour is $thehour #"
 snapname=$(curl http://127.0.0.1:8888/v1/producer/create_snapshot | jq '.snapshot_name')
 rm -f $shcreate
 touch $shcreate && chmod +x $shcreate
+
+if [[ $remotewebserver -eq 0 ]]
+then
+echo "Creating local snapshot..."
+echo "find $local_server_folder -name \"*.gz\" -type f -size -1000k -delete" >> $shcreate
+echo "ls -F $local_server_folder/*.gz | head -n -8 | xargs -r rm" >> $shcreate
+echo "tar -Scvzf $filename-snaponly.tar.gz $snapname" >> $shcreate
+echo "mv $filename-snaponly.tar.gz $local_server_folder"  >> $shcreate
+else
 echo "tar -Scvzf $filename-snaponly.tar.gz $snapname" >> $shcreate
 echo "ssh -p $sshportno $remote_user 'find $remote_server_folder -name \"*.gz\" -type f -size -1000k -delete'" >> $shcreate
 echo "ssh -p $sshportno $remote_user 'ls -F $remote_server_folder/*.gz | head -n -8 | xargs -r rm'" >> $shcreate
 echo "rsync -rv -e 'ssh -p $sshportno' --progress $filename-snaponly.tar.gz $remote_user:$remote_server_folder" >> $shcreate
 echo "Sending snapshot only..."
+fi
 $shcreate
+
 
 else
 echo "Snapshot is not due..Aborting"
@@ -83,29 +104,55 @@ chainstopped=1
 echo "#Blocks Log Start #"
 rm -f $shcreatefull
 touch $shcreatefull && chmod +x $shcreatefull
+
+
+if [[ $remotewebserver -eq 0 ]]
+then
+
+echo "Creating blocks log..."
+echo "find $local_server_folder/blocks -name \"*.gz\" -type f -size -1000k -delete" >> $shcreatefull
+echo "ls -F $local_server_folder/blocks/*.gz | head -n -1 | xargs -r rm" >> $shcreatefull
 echo "tar -Scvzf $filename-blockslog.tar.gz $blocksfolder/blocks.log $blocksfolder/blocks.index" >> $shcreatefull
-echo "ssh -p $sshportno $remote_user 'find $remote_server_folder/blocks -name \"*.gz\" -type f -size -1000k -delete'" >> $shcreate
+echo "mv $filename-blockslog.tar.gz $local_server_folder/blocks"  >> $shcreatefull
+else
+echo "tar -Scvzf $filename-blockslog.tar.gz $blocksfolder/blocks.log $blocksfolder/blocks.index" >> $shcreatefull
+echo "ssh -p $sshportno $remote_user 'find $remote_server_folder/blocks -name \"*.gz\" -type f -size -1000k -delete'" >> $shcreatefull
 echo "ssh -p $sshportno $remote_user 'ls -F $remote_server_folder/blocks/*.gz | head -n -1 | xargs -r rm'" >> $shcreatefull
 echo "rsync -rv -e 'ssh -p $sshportno' --progress $filename-blockslog.tar.gz $remote_user:$remote_server_folder/blocks" >> $shcreatefull
+
+fi
+
 echo "Sending blocks..."
 $shcreatefull
 else
 echo "Blocks Log is not due..Aborting"
 fi
-
-
+#echo "exiting..."
+#exit 1
 
 #Run twice a day by MOD the hour by 12
-if [[ $(($thehour%24)) -eq 0 ]] || [[ $teststatehistory -eq 1 ]]
+if [[ $(($thehour%12)) -eq 0 ]] || [[ $teststatehistory -eq 1 ]]
 then
 
 echo "#State History Start #"
 rm -f $shcreatefullstate
 touch $shcreatefullstate && chmod +x $shcreatefullstate
+
+
+if [[ $remotewebserver -eq 0 ]]
+then
+echo "find $local_server_folder/state-history -name \"*.gz\" -type f -size -1000k -delete" >> $shcreatefullstate
+echo "ls -F $local_server_folder/state-history/*.gz | head -n -1 | xargs -r rm" >> $shcreatefullstate
 echo "tar -Scvzf $filename-statehistory.tar.gz $statehistoryfolder  " >> $shcreatefullstate
-echo "ssh -p $sshportno $remote_user 'find $remote_server_folder/state-history -name \"*.gz\" -type f -size -1000k -delete'" >> $shcreate
+echo "mv $filename-statehistory.tar.gz $local_server_folder/state-history"  >> $shcreatefullstate
+
+else
+echo "tar -Scvzf $filename-statehistory.tar.gz $statehistoryfolder  " >> $shcreatefullstate
+echo "ssh -p $sshportno $remote_user 'find $remote_server_folder/state-history -name \"*.gz\" -type f -size -1000k -delete'" >> $shcreatefullstate
 echo "ssh -p $sshportno $remote_user 'ls -F $remote_server_folder/state-history/*.gz | head -n -1 | xargs -r rm'" >> $shcreatefullstate
 echo "rsync -rv -e 'ssh -p $sshportno' --progress $filename-statehistory.tar.gz $remote_user:$remote_server_folder/state-history" >> $shcreatefullstate
+fi
+
 echo "Sending state history..."
 $shcreatefullstate
 else
