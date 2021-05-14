@@ -4,7 +4,7 @@
 # of the node.  Every 2 seconds it writes the new difference between our
 # head blocknumber and an external nodes head block number.
 
-externalAPI=https://rem.eon.llc/
+externalAPI=https://remchain.remme.io/
 
 function writePercentage() {
 
@@ -31,7 +31,7 @@ echo -999999999999 > $synclog
 
 
 
-their_head_block_num=$(remcli -u https://rem.eon.llc/ get info| jq '.head_block_num')
+their_head_block_num=$(remcli -u https://remchain.remme.io get info| jq '.head_block_num')
 our_head_block_num=$(remcli get info | jq '.head_block_num')
 sleep 1
 
